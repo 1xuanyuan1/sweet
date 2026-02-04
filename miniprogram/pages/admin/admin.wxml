@@ -1,0 +1,49 @@
+<!-- pages/admin/admin.wxml -->
+<view class="container">
+  <view class="tabs">
+    <view class="tab {{currentTab === 'orders' ? 'active' : ''}}" bindtap="switchTab" data-tab="orders">订单管理</view>
+    <view class="tab {{currentTab === 'stats' ? 'active' : ''}}" bindtap="switchTab" data-tab="stats">财务统计</view>
+  </view>
+
+  <view wx:if="{{currentTab === 'orders'}}" class="order-list">
+    <view wx:for="{{orders}}" wx:key="_id" class="order-card card">
+      <view class="order-info">
+        <view class="user-info" wx:if="{{item.userInfo}}">
+          <image class="user-avatar" src="{{item.userInfo.avatarUrl}}"></image>
+          <text class="user-name">{{item.userInfo.nickName}}</text>
+        </view>
+        <view>{{item.recipe.name}} + {{item.style.name}}</view>
+        <view class="order-meta">数量: {{item.quantity}} | 状态: {{item.statusText}}</view>
+        <view class="order-price">价格: ¥{{item.finalPrice}} (原价: ¥{{item.originalPrice}})</view>
+      </view>
+      <view class="actions">
+        <button size="mini" bindtap="updatePrice" data-id="{{item._id}}">改价</button>
+        <button size="mini" bindtap="updateStatus" data-id="{{item._id}}" data-current-status="{{item.status}}">更新状态</button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{currentTab === 'stats'}}" class="stats-list">
+    <view wx:for="{{stats}}" wx:key="_id" class="stats-card card">
+      <view class="stats-month">{{item._id}}</view>
+      <view class="stats-grid">
+        <view class="stats-item">
+          <text class="label">总单数</text>
+          <text class="val">{{item.totalOrders}}</text>
+        </view>
+        <view class="stats-item">
+          <text class="label">总金额</text>
+          <text class="val">¥{{item.totalAmount}}</text>
+        </view>
+        <view class="stats-item">
+          <text class="label">已收</text>
+          <text class="val green">¥{{item.paidAmount}}</text>
+        </view>
+        <view class="stats-item">
+          <text class="label">待收</text>
+          <text class="val red">¥{{item.pendingAmount}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

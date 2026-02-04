@@ -1,0 +1,81 @@
+/* pages/order-list/order-list.wxss */
+.container {
+  padding: 32rpx;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #8B0000;
+  margin-bottom: 40rpx;
+  text-align: center;
+}
+
+.order-card {
+  margin-bottom: 30rpx;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1rpx solid #E0DCD5;
+  padding-bottom: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.order-time {
+  font-size: 24rpx;
+  color: #757575;
+}
+
+.order-status {
+  font-size: 24rpx;
+  font-weight: bold;
+}
+
+.order-body {
+  margin-bottom: 20rpx;
+}
+
+.recipe-name {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #2C2C2C;
+}
+
+.style-name {
+  font-size: 26rpx;
+  color: #757575;
+  margin-left: 10rpx;
+}
+
+.quantity {
+  font-size: 26rpx;
+  color: #757575;
+  margin-top: 10rpx;
+}
+
+.order-footer {
+  text-align: right;
+  border-top: 1rpx dashed #E0DCD5;
+  padding-top: 20rpx;
+}
+
+.price-label {
+  font-size: 24rpx;
+  color: #757575;
+}
+
+.price-value {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #8B0000;
+  margin-left: 10rpx;
+}
+
+.empty {
+  text-align: center;
+  color: #757575;
+  margin-top: 100rpx;
+  font-style: italic;
+}

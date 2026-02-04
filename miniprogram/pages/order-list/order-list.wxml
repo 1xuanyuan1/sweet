@@ -1,0 +1,26 @@
+<!-- pages/order-list/order-list.wxml -->
+<view class="container">
+  <view class="title">我的订单</view>
+
+  <view wx:if="{{orders.length === 0 && !loading}}" class="empty">
+    暂无订单，快去挑选吧
+  </view>
+
+  <view wx:for="{{orders}}" wx:key="_id" class="order-card card" bindtap="viewDetail" data-id="{{item._id}}">
+    <view class="order-header">
+      <text class="order-time">{{item.createdAt}}</text>
+      <text class="order-status status-{{item.status}}">{{item.statusText}}</text>
+    </view>
+    <view class="order-body">
+      <view class="product-info">
+        <text class="recipe-name">{{item.recipe.name}}</text>
+        <text class="style-name">({{item.style.name}})</text>
+      </view>
+      <view class="quantity">数量: {{item.quantity}}</view>
+    </view>
+    <view class="order-footer">
+      <text class="price-label">最终价格:</text>
+      <text class="price-value">¥ {{item.finalPrice}}</text>
+    </view>
+  </view>
+</view>

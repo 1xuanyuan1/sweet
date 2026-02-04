@@ -1,0 +1,50 @@
+<!-- pages/order-detail/order-detail.wxml -->
+<view class="container" wx:if="{{order}}">
+  <view class="status-banner card">
+    <view class="status-text">{{order.statusText}}</view>
+    <view class="status-desc">订单编号: {{order._id}}</view>
+  </view>
+
+  <view class="detail-card card">
+    <view class="section-title">选购详情</view>
+    <view class="detail-item">
+      <text class="label">香方</text>
+      <text class="val">{{order.recipe.name}}</text>
+    </view>
+    <view class="detail-item">
+      <text class="label">款式</text>
+      <text class="val">{{order.style.name}}</text>
+    </view>
+    <view class="detail-item">
+      <text class="label">数量</text>
+      <text class="val">{{order.quantity}}</text>
+    </view>
+  </view>
+
+  <view class="price-card card">
+    <view class="detail-item">
+      <text class="label">原始预估价</text>
+      <text class="val">¥ {{order.originalPrice}}</text>
+    </view>
+    <view class="detail-item highlight">
+      <text class="label">最终确认价</text>
+      <text class="val">¥ {{order.finalPrice}}</text>
+    </view>
+  </view>
+
+  <view class="express-card card" wx:if="{{order.expressNumber}}">
+    <view class="section-title">物流信息</view>
+    <view class="detail-item">
+      <text class="label">快递公司</text>
+      <text class="val">{{order.expressCompany}}</text>
+    </view>
+    <view class="detail-item">
+      <text class="label">快递单号</text>
+      <text class="val">{{order.expressNumber}}</text>
+    </view>
+  </view>
+
+  <view class="action-bar" wx:if="{{order.status === 'wait_confirm'}}">
+    <button class="btn-primary" bindtap="confirmPrice">确认价格并开始制作</button>
+  </view>
+</view>

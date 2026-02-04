@@ -1,0 +1,18 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/admin/admin",
+    "pages/order-list/order-list",
+    "pages/order-detail/order-detail"
+  ],
+  "window": {
+    "backgroundColor": "#FBF9F2",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#8B0000",
+    "navigationBarTitleText": "和熹香堂",
+    "navigationBarTextStyle": "white"
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}
