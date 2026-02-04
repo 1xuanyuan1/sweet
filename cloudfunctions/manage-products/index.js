@@ -63,6 +63,12 @@ exports.main = async (event, context) => {
         }
       });
 
+    case 'DELETE_RECIPE':
+      return await db.collection('recipes').doc(data._id).remove();
+
+    case 'DELETE_STYLE':
+      return await db.collection('styles').doc(data._id).remove();
+
     default:
       return {
         success: false,

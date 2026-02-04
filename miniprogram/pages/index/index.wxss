@@ -61,6 +61,19 @@
   color: #757575;
 }
 
+.style-preview {
+  margin-top: 24rpx;
+  text-align: left; /* 改为左对齐 */
+}
+
+.style-image {
+  width: 160rpx; /* 稍微调小一点，更精致 */
+  height: 160rpx;
+  border-radius: 8rpx;
+  border: 1rpx solid #E0DCD5;
+  background-color: #F9F6F2;
+}
+
 .desc {
   font-size: 24rpx;
   color: #757575;

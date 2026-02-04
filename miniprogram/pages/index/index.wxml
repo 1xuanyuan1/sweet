@@ -1,11 +1,10 @@
 <!-- index.wxml -->
 <view class="container">
   <view class="header">
-    <image class="logo" src="/images/logo.jpg" mode="aspectFit"></image>
+    <image class="logo" src="/images/logo.png" mode="aspectFit"></image>
     <view class="brand-name">和熹香堂</view>
     <view class="brand-slogan">非遗手工合香 · 承袭千年余韵</view>
   </view>
-
   <view class="form-container card">
     <view class="form-item">
       <view class="label">选择方子</view>
@@ -14,9 +13,10 @@
           {{selectedRecipeIndex === -1 ? '请选择心仪的香方' : recipes[selectedRecipeIndex].name}}
         </view>
       </picker>
-      <view wx:if="{{selectedRecipeIndex !== -1}}" class="desc">{{recipes[selectedRecipeIndex].description}}</view>
+      <view wx:if="{{selectedRecipeIndex !== -1}}" class="desc">
+        {{recipes[selectedRecipeIndex].description}}
+      </view>
     </view>
-
     <view class="form-item">
       <view class="label">选择款式</view>
       <picker bindchange="onStyleChange" value="{{selectedStyleIndex}}" range="{{styles}}" range-key="name">
@@ -24,36 +24,32 @@
           {{selectedStyleIndex === -1 ? '请选择喜欢的款式' : styles[selectedStyleIndex].name}}
         </view>
       </picker>
+      <view wx:if="{{selectedStyleIndex !== -1}}" class="style-preview">
+        <image class="style-image" src="{{styles[selectedStyleIndex].imageUrl || '/images/logo.png'}}" mode="aspectFit"></image>
+      </view>
     </view>
-
     <view class="form-item">
       <view class="label">选择数量</view>
       <input class="input" type="number" value="{{quantity}}" bindinput="onQuantityChange" />
     </view>
-
     <view class="price-section" wx:if="{{totalPrice > 0}}">
       <view class="price-label">预计总价</view>
       <view class="price-value">¥ {{totalPrice}}</view>
     </view>
-
     <button class="btn-primary" bindtap="submitOrder">提交订单意向</button>
   </view>
-
   <!-- Login Modal -->
   <view class="modal-mask" wx:if="{{showLogin}}">
     <view class="modal-content card">
       <view class="modal-title">欢迎来到和熹香堂</view>
       <view class="modal-desc">请完善您的信息以继续</view>
-      
       <button class="avatar-wrapper" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
-        <image class="avatar" src="{{tempAvatarUrl || '/images/logo.jpg'}}"></image>
+        <image class="avatar" src="{{tempAvatarUrl || '/images/logo.png'}}"></image>
       </button>
       <input type="nickname" class="nickname-input" placeholder="请输入昵称" bindinput="onNickNameInput" />
-      
       <button class="btn-primary" bindtap="login">授权登录</button>
     </view>
   </view>
-
   <view class="footer-nav">
     <navigator url="/pages/order-list/order-list" class="nav-item">我的订单</navigator>
     <view wx:if="{{userInfo.isAdmin}}" bindtap="goToAdmin" class="nav-item">后台管理</view>
