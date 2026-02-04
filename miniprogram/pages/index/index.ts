@@ -173,5 +173,20 @@ Page({
     } else {
       wx.showToast({ title: '无权限访问', icon: 'none' });
     }
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '和熹香堂 - 非遗手工合香',
+      path: '/pages/index/index',
+      imageUrl: '/images/logo.png'
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '和熹香堂 - 非遗手工合香',
+      imageUrl: '/images/logo.png'
+    };
   }
 });
