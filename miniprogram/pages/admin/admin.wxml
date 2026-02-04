@@ -87,10 +87,27 @@
   <view class="modal-mask" wx:if="{{showRecipeModal}}">
     <view class="modal-content card">
       <view class="modal-title">{{editingRecipe._id ? '编辑方子' : '新增方子'}}</view>
-      <input class="input" placeholder="方子名称" value="{{editingRecipe.name}}" bindinput="onRecipeInput" data-field="name" />
-      <input class="input" placeholder="功效描述" value="{{editingRecipe.description}}" bindinput="onRecipeInput" data-field="description" />
-      <textarea class="textarea" placeholder="配方材料 (逗号分隔)" value="{{editingRecipe.ingredientsStr}}" bindinput="onRecipeInput" data-field="ingredientsStr" />
-      <input class="input" type="digit" placeholder="单价 (元/kg)" value="{{editingRecipe.pricePerKg}}" bindinput="onRecipeInput" data-field="pricePerKg" />
+      
+      <view class="form-group">
+        <view class="form-label">方子名称</view>
+        <input class="input" placeholder="请输入名称" value="{{editingRecipe.name}}" bindinput="onRecipeInput" data-field="name" />
+      </view>
+
+      <view class="form-group">
+        <view class="form-label">功效描述</view>
+        <input class="input" placeholder="请输入描述" value="{{editingRecipe.description}}" bindinput="onRecipeInput" data-field="description" />
+      </view>
+
+      <view class="form-group">
+        <view class="form-label">配方材料 (逗号分隔)</view>
+        <textarea class="textarea" placeholder="例如：沉香，檀香，降真香" value="{{editingRecipe.ingredientsStr}}" bindinput="onRecipeInput" data-field="ingredientsStr" />
+      </view>
+
+      <view class="form-group">
+        <view class="form-label">单价 (元/kg)</view>
+        <input class="input" type="digit" placeholder="0.00" value="{{editingRecipe.pricePerKg}}" bindinput="onRecipeInput" data-field="pricePerKg" />
+      </view>
+
       <view class="modal-actions">
         <button size="mini" bindtap="closeRecipeModal">取消</button>
         <button size="mini" type="primary" bindtap="saveRecipe">保存</button>
@@ -106,9 +123,22 @@
         <image class="upload-img" src="{{editingStyle.imageUrl || '/images/logo.png'}}" mode="aspectFit"></image>
         <view class="upload-tip">点击上传图片</view>
       </view>
-      <input class="input" placeholder="款式名称" value="{{editingStyle.name}}" bindinput="onStyleInput" data-field="name" />
-      <input class="input" type="digit" placeholder="工费 (元/个)" value="{{editingStyle.laborCost}}" bindinput="onStyleInput" data-field="laborCost" />
-      <input class="input" type="digit" placeholder="耗材量 (kg/个)" value="{{editingStyle.materialWeight}}" bindinput="onStyleInput" data-field="materialWeight" />
+      
+      <view class="form-group">
+        <view class="form-label">款式名称</view>
+        <input class="input" placeholder="请输入名称" value="{{editingStyle.name}}" bindinput="onStyleInput" data-field="name" />
+      </view>
+
+      <view class="form-group">
+        <view class="form-label">工费 (元/个)</view>
+        <input class="input" type="digit" placeholder="0.00" value="{{editingStyle.laborCost}}" bindinput="onStyleInput" data-field="laborCost" />
+      </view>
+
+      <view class="form-group">
+        <view class="form-label">耗材量 (kg/个)</view>
+        <input class="input" type="digit" placeholder="0.000" value="{{editingStyle.materialWeight}}" bindinput="onStyleInput" data-field="materialWeight" />
+      </view>
+
       <view class="modal-actions">
         <button size="mini" bindtap="closeStyleModal">取消</button>
         <button size="mini" type="primary" bindtap="saveStyle">保存</button>
