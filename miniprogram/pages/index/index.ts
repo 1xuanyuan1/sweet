@@ -57,14 +57,16 @@ Page({
 
     wx.showLoading({ title: '登录中' });
     try {
-      // 上传头像到云存储（可选，或者直接用临时路径，但临时路径会过期，建议上传）
-      // 这里为了简化，假设直接用临时路径，实际生产建议上传
-      // 如果要上传：
-      // const uploadRes = await wx.cloud.uploadFile({ cloudPath: `avatars/${Date.now()}.png`, filePath: tempAvatarUrl });
-      // const realAvatarUrl = uploadRes.fileID;
-      
-      const realAvatarUrl = tempAvatarUrl; // 暂用临时路径，注意有效期
+      // 1. 上传头像到云存储
+      // 使用时间戳+随机数生成文件名，避免重名
+      const cloudPath = `avatars/${Date.now()}-${Math.floor(Math.random() * 1000)}.jpg`;
+      const uploadRes = await wx.cloud.uploadFile({
+        cloudPath,
+        filePath: tempAvatarUrl,
+      });
+      const realAvatarUrl = uploadRes.fileID;
 
+      // 2. 调用云函数存储用户信息
       const user = await callCloud('manage-users', 'LOGIN', {
         nickName: tempNickName,
         avatarUrl: realAvatarUrl
@@ -77,6 +79,7 @@ Page({
       });
       wx.hideLoading();
     } catch (err) {
+      console.error(err);
       wx.hideLoading();
       wx.showToast({ title: '登录失败', icon: 'none' });
     }

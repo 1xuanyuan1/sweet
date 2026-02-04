@@ -35,8 +35,69 @@ exports.main = async (event, context) => {
       });
 
     case 'ADMIN_GET_ALL':
-      // 简单起见，这里不处理分页，实际应处理
-      return await db.collection('orders').orderBy('createdAt', 'desc').get();
+      // 使用 aggregate 进行联表查询，关联 users 集合
+      const ordersRes = await db.collection('orders').aggregate()
+        .lookup({
+          from: 'users',
+          localField: '_openid',
+          foreignField: '_id',
+          as: 'userList'
+        })
+        .replaceRoot({
+          newRoot: $.mergeObjects([$.arrayElemAt(['$userList', 0]), '$$ROOT'])
+        })
+        .project({
+          // userList: 0, // 移除不需要的字段，避免混合 projection
+          // 显式指定所有需要的字段
+          _id: 1,
+          userInfo: {
+            nickName: '$nickName',
+            avatarUrl: '$avatarUrl'
+          },
+          recipe: 1,
+          style: 1,
+          quantity: 1,
+          originalPrice: 1,
+          finalPrice: 1,
+          status: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          expressCompany: 1,
+          expressNumber: 1
+        })
+        .sort({ createdAt: -1 })
+        .limit(100) // 限制返回数量，避免超出限制
+        .end();
+
+      // 如果查询结果为空，list 可能是 undefined 或空数组
+      const orderList = ordersRes.list || [];
+
+      // 处理头像 URL：将 cloud:// 或 wxfile:// 转换为 http 链接（仅限 cloud://）
+      // 注意：wxfile:// 是本地临时路径，云端无法转换，只能依赖前端上传 cloudPath 后获取的 cloudID
+      // 这里主要处理 cloudID 的换取
+      const fileList = orderList
+        .filter(item => item.userInfo && item.userInfo.avatarUrl && item.userInfo.avatarUrl.startsWith('cloud://'))
+        .map(item => item.userInfo.avatarUrl);
+
+      let tempFileMap = {};
+      if (fileList.length > 0) {
+        const result = await cloud.getTempFileURL({ fileList });
+        result.fileList.forEach(file => {
+          tempFileMap[file.fileID] = file.tempFileURL;
+        });
+      }
+
+      const finalOrders = orderList.map(order => {
+        if (order.userInfo && order.userInfo.avatarUrl) {
+          // 如果是 cloudID，替换为临时 HTTP 链接
+          if (tempFileMap[order.userInfo.avatarUrl]) {
+            order.userInfo.avatarUrl = tempFileMap[order.userInfo.avatarUrl];
+          }
+        }
+        return order;
+      });
+
+      return { data: finalOrders };
 
     case 'CUSTOMER_GET_ALL':
       return await db.collection('orders')

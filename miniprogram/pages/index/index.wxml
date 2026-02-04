@@ -55,7 +55,7 @@
   </view>
 
   <view class="footer-nav">
-    <view bindtap="submitOrder" class="nav-item">我的订单</view>
+    <navigator url="/pages/order-list/order-list" class="nav-item">我的订单</navigator>
     <view wx:if="{{userInfo.isAdmin}}" bindtap="goToAdmin" class="nav-item">后台管理</view>
   </view>
 </view>
