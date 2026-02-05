@@ -1,5 +1,5 @@
 // pages/admin/admin.ts
-import { callCloud } from '../../utils/cloud';
+import { request, uploadFile } from '../../utils/request';
 import { OrderStatusText, OrderStatus, Recipe, Style } from '../../utils/types';
 
 const app = getApp<IAppOption>();
@@ -54,25 +54,26 @@ Page({
     wx.showLoading({ title: '加载中' });
     try {
       // 并行请求所有数据
-      const [ordersRes, statsRes, productsRes] = await Promise.all([
-        callCloud('manage-orders', 'ADMIN_GET_ALL'),
-        callCloud('manage-orders', 'GET_STATS'),
-        callCloud('manage-products', 'GET_ALL')
+      const [orders, stats, products] = await Promise.all([
+        request({ url: '/orders/admin/all' }),
+        request({ url: '/orders/admin/stats' }),
+        request({ url: '/products/all' })
       ]) as any[];
       
       // 格式化订单数据
-      const orders = ordersRes.data.map((order: any) => ({
+      const formattedOrders = orders.map((order: any) => ({
         ...order,
         statusText: OrderStatusText[order.status as OrderStatus] || order.status
       }));
 
       this.setData({
-        orders,
-        stats: statsRes.list,
-        recipes: productsRes.recipes,
-        styles: productsRes.styles
+        orders: formattedOrders,
+        stats: stats.list || [], // Backend implementation pending for stats list
+        recipes: products.recipes,
+        styles: products.styles
       });
     } catch (err) {
+      console.error(err);
       wx.showToast({ title: '加载失败', icon: 'none' });
     } finally {
       wx.hideLoading();
@@ -83,7 +84,7 @@ Page({
     this.setData({ currentTab: e.currentTarget.dataset.tab });
   },
 
-  // --- 订单逻辑 (保持不变) ---
+  // --- 订单逻辑 ---
   async updatePrice(e: any) {
     const { id } = e.currentTarget.dataset;
     wx.showModal({
@@ -93,9 +94,10 @@ Page({
       success: async (res) => {
         if (res.confirm && res.content) {
           try {
-            await callCloud('manage-orders', 'UPDATE_PRICE', {
-              orderId: id,
-              finalPrice: parseFloat(res.content)
+            await request({
+                url: `/orders/admin/${id}/price`,
+                method: 'PUT',
+                data: { finalPrice: parseFloat(res.content) }
             });
             this.fetchData();
           } catch (err) {
@@ -125,10 +127,10 @@ Page({
           expressData = { expressCompany: '圆通', expressNumber: 'YT123456789' };
         }
         try {
-          await callCloud('manage-orders', 'UPDATE_STATUS', {
-            orderId: id,
-            status,
-            ...expressData
+          await request({
+            url: `/orders/admin/${id}/status`,
+            method: 'PUT',
+            data: { status, ...expressData }
           });
           this.fetchData();
         } catch (err) {
@@ -180,7 +182,7 @@ Page({
       return;
     }
 
-    const ingredients = ingredientsStr.split(/[,，]/).map(s => s.trim()).filter(s => s);
+    const ingredients = ingredientsStr.split(/[,，]/).map((s: string) => s.trim()).filter((s: string) => s);
     const data = {
       name,
       description,
@@ -191,9 +193,17 @@ Page({
     wx.showLoading({ title: '保存中' });
     try {
       if (_id) {
-        await callCloud('manage-products', 'UPDATE_RECIPE', { _id, ...data });
+        await request({
+            url: `/products/recipes/${_id}`,
+            method: 'PUT',
+            data
+        });
       } else {
-        await callCloud('manage-products', 'ADD_RECIPE', data);
+        await request({
+            url: '/products/recipes',
+            method: 'POST',
+            data
+        });
       }
       this.closeRecipeModal();
       this.fetchData();
@@ -213,7 +223,10 @@ Page({
         if (res.confirm) {
           wx.showLoading({ title: '删除中' });
           try {
-            await callCloud('manage-products', 'DELETE_RECIPE', { _id: id });
+            await request({
+                url: `/products/recipes/${id}`,
+                method: 'DELETE'
+            });
             this.fetchData();
           } catch (err) {
             wx.showToast({ title: '删除失败', icon: 'none' });
@@ -236,7 +249,7 @@ Page({
           name: style.name,
           laborCost: style.laborCost.toString(),
           materialWeight: style.materialWeight.toString(),
-          imageUrl: style.imageUrl
+          imageUrl: style.image || style.imageUrl // Backend uses image, frontend uses imageUrl
         }
       });
     } else {
@@ -264,14 +277,11 @@ Page({
       const tempFilePath = res.tempFiles[0].tempFilePath;
       
       wx.showLoading({ title: '上传中' });
-      const cloudPath = `styles/${Date.now()}-${Math.floor(Math.random() * 1000)}.jpg`;
-      const uploadRes = await wx.cloud.uploadFile({
-        cloudPath,
-        filePath: tempFilePath
-      });
+      
+      const fileUrl = await uploadFile(tempFilePath);
       
       this.setData({
-        'editingStyle.imageUrl': uploadRes.fileID
+        'editingStyle.imageUrl': fileUrl
       });
       wx.hideLoading();
     } catch (err) {
@@ -290,19 +300,28 @@ Page({
       name,
       laborCost: parseFloat(laborCost),
       materialWeight: parseFloat(materialWeight),
-      imageUrl
+      image: imageUrl // Backend expects 'image'
     };
 
     wx.showLoading({ title: '保存中' });
     try {
       if (_id) {
-        await callCloud('manage-products', 'UPDATE_STYLE', { _id, ...data });
+        await request({
+            url: `/products/styles/${_id}`,
+            method: 'PUT',
+            data
+        });
       } else {
-        await callCloud('manage-products', 'ADD_STYLE', data);
+        await request({
+            url: '/products/styles',
+            method: 'POST',
+            data
+        });
       }
       this.closeStyleModal();
       this.fetchData();
     } catch (err) {
+      console.error(err);
       wx.showToast({ title: '保存失败', icon: 'none' });
     } finally {
       wx.hideLoading();
@@ -318,7 +337,10 @@ Page({
         if (res.confirm) {
           wx.showLoading({ title: '删除中' });
           try {
-            await callCloud('manage-products', 'DELETE_STYLE', { _id: id });
+            await request({
+                url: `/products/styles/${id}`,
+                method: 'DELETE'
+            });
             this.fetchData();
           } catch (err) {
             wx.showToast({ title: '删除失败', icon: 'none' });

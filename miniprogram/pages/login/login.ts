@@ -1,5 +1,5 @@
 // pages/login/login.ts
-import { callCloud } from '../../utils/cloud';
+import { request, uploadFile } from '../../utils/request';
 
 const app = getApp<IAppOption>();
 
@@ -37,20 +37,27 @@ Page({
     wx.showLoading({ title: '登录中' });
 
     try {
-      // 1. 上传头像到云存储
-      const cloudPath = `avatars/${Date.now()}-${Math.floor(Math.random() * 1000)}.jpg`;
-      const uploadRes = await wx.cloud.uploadFile({
-        cloudPath,
-        filePath: tempAvatarUrl,
-      });
-      const realAvatarUrl = uploadRes.fileID;
+      // 1. 上传头像到服务器
+      const realAvatarUrl = await uploadFile(tempAvatarUrl);
 
-      // 2. 调用云函数存储用户信息
-      const user = await callCloud('manage-users', 'LOGIN', {
-        nickName: tempNickName,
-        avatarUrl: realAvatarUrl
+      // 2. 获取 Login Code
+      const { code } = await wx.login();
+
+      // 3. 调用后端登录接口
+      const res: any = await request({
+        url: '/auth/login',
+        method: 'POST',
+        data: {
+            code,
+            userInfo: {
+                nickName: tempNickName,
+                avatarUrl: realAvatarUrl
+            }
+        }
       });
       
+      const { token, user } = res;
+      wx.setStorageSync('token', token);
       app.globalData.userInfo = user;
       
       wx.hideLoading();

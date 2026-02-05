@@ -1,5 +1,5 @@
 // pages/index/index.ts
-import { callCloud } from "../../utils/cloud";
+import { request } from "../../utils/request";
 import { Recipe, Style } from "../../utils/types";
 
 const app = getApp<IAppOption>();
@@ -34,7 +34,7 @@ Page({
 
   async fetchProducts() {
     try {
-      const res: any = await callCloud("manage-products", "GET_ALL");
+      const res: any = await request({ url: "/products/all" });
       this.setData({
         recipes: res.recipes,
         styles: res.styles,
@@ -80,6 +80,7 @@ Page({
 
     const recipe = recipes[selectedRecipeIndex];
     // 公式: (方子单价 * 款式耗材量 + 款式工费) * 数量
+    // 注意: 服务端模型可能没有 ingredients 字段，但有 pricePerKg 等
     const price =
       (recipe.pricePerKg * currentStyle.materialWeight +
         currentStyle.laborCost) *
@@ -105,18 +106,18 @@ Page({
 
     wx.showLoading({ title: "正在提交" });
     try {
-      await callCloud("manage-orders", "CREATE", {
-        recipe: recipes[selectedRecipeIndex],
-        style: currentStyle,
-        quantity,
-        originalPrice: totalPrice,
-        finalPrice: totalPrice,
-        userInfo: {
-          nickName: userInfo.nickName,
-          avatarUrl: userInfo.avatarUrl,
+      await request({
+        url: "/orders",
+        method: "POST",
+        data: {
+          recipe: recipes[selectedRecipeIndex],
+          style: currentStyle,
+          quantity,
+          originalPrice: totalPrice,
+          finalPrice: totalPrice,
+          // userInfo is handled by backend via token, but we can send if needed for snapshot
+          // Backend createOrder uses req.user.openid
         },
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
       });
 
       wx.hideLoading();

@@ -1,6 +1,6 @@
 // pages/order-list/order-list.ts
-import { callCloud } from '../../utils/cloud';
-import { Order, OrderStatusText, OrderStatus } from '../../utils/types';
+import { request } from '../../utils/request';
+import { Order, OrderStatusText } from '../../utils/types';
 
 Page({
   data: {
@@ -10,17 +10,22 @@ Page({
 
   onShow() {
     this.fetchOrders();
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({
+        selected: 1
+      });
+    }
   },
 
   async fetchOrders() {
     try {
-      const res: any = await callCloud('manage-orders', 'CUSTOMER_GET_ALL');
-      const orders = res.data.map((order: Order) => ({
+      const orders = await request<Order[]>({ url: '/orders/my' });
+      const formattedOrders = orders.map((order: Order) => ({
         ...order,
         statusText: OrderStatusText[order.status] || order.status
       }));
       this.setData({
-        orders,
+        orders: formattedOrders,
         loading: false
       });
     } catch (err) {
@@ -30,6 +35,9 @@ Page({
 
   viewDetail(e: any) {
     const { id } = e.currentTarget.dataset;
+    // We haven't implemented detail page fetch yet, but order-detail usually takes ID
+    // and fetches or we can pass data. 
+    // Wait, standard is navigate by ID.
     wx.navigateTo({ url: `/pages/order-detail/order-detail?id=${id}` });
   }
 });
