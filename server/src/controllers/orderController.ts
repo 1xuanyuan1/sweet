@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import Order from "../models/Order";
-import User from "../models/User";
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
@@ -26,6 +25,25 @@ export const getMyOrders = async (req: Request, res: Response) => {
     res.json(orders);
   } catch (error) {
     res.status(500).json({ error: "Error fetching orders" });
+  }
+};
+
+export const getOrderById = async (req: Request, res: Response) => {
+  try {
+    // @ts-ignore
+    const openid = req.user.openid as string;
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    if (order.openid !== openid) {
+      res.status(403).json({ error: "Access denied" });
+      return;
+    }
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching order" });
   }
 };
 
@@ -129,6 +147,31 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
   }
 };
 
+export const confirmOrder = async (req: Request, res: Response) => {
+  try {
+    // @ts-ignore
+    const openid = req.user.openid as string;
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    if (order.openid !== openid) {
+      res.status(403).json({ error: "Access denied" });
+      return;
+    }
+    if (order.status !== "wait_confirm") {
+      res.status(400).json({ error: "Invalid order status" });
+      return;
+    }
+    order.status = "confirmed";
+    await order.save();
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ error: "Error confirming order" });
+  }
+};
+
 export const getStats = async (req: Request, res: Response) => {
   try {
     const totalOrders = await Order.countDocuments();
@@ -136,12 +179,17 @@ export const getStats = async (req: Request, res: Response) => {
     // 1. Monthly Stats: Total Sales, Paid Amount, Pending Amount
     const monthlyStats = await Order.aggregate([
       {
+        $match: {
+          status: { $ne: "cancelled" },
+        },
+      },
+      {
         $group: {
           _id: {
             year: { $year: "$createdAt" },
             month: { $month: "$createdAt" },
           },
-          totalSales: { $sum: "$finalPrice" }, // Total Sales (All orders)
+          totalSales: { $sum: { $ifNull: ["$finalPrice", "$originalPrice"] } },
           paidAmount: {
             $sum: {
               $cond: [
@@ -151,7 +199,7 @@ export const getStats = async (req: Request, res: Response) => {
                     ["paid", "producing", "shipped", "received"],
                   ],
                 },
-                "$finalPrice",
+                { $ifNull: ["$finalPrice", "$originalPrice"] },
                 0,
               ],
             },
@@ -160,7 +208,7 @@ export const getStats = async (req: Request, res: Response) => {
             $sum: {
               $cond: [
                 { $in: ["$status", ["pending", "wait_confirm", "confirmed"]] },
-                "$finalPrice",
+                { $ifNull: ["$finalPrice", "$originalPrice"] },
                 0,
               ],
             },

@@ -1,6 +1,6 @@
 // pages/admin/admin.ts
-import { request, uploadFile } from '../../utils/request';
-import { OrderStatusText, OrderStatus, Recipe, Style } from '../../utils/types';
+import { request, uploadFile } from "../../utils/request";
+import { OrderStatusText, OrderStatus, Recipe, Style } from "../../utils/types";
 
 const app = getApp<IAppOption>();
 
@@ -10,28 +10,28 @@ Page({
     stats: [],
     recipes: [] as Recipe[],
     styles: [] as Style[],
-    currentTab: 'orders', // orders | stats | recipes | styles
+    currentTab: "orders", // orders | stats | recipes | styles
     OrderStatusText,
-    
+
     // 方子编辑相关
     showRecipeModal: false,
     editingRecipe: {
-      _id: '',
-      name: '',
-      description: '',
-      ingredientsStr: '', // 临时字段，用于输入框，逗号分隔
-      pricePerKg: ''
+      _id: "",
+      name: "",
+      description: "",
+      ingredientsStr: "", // 临时字段，用于输入框，逗号分隔
+      pricePerKg: "",
     },
 
     // 款式编辑相关
     showStyleModal: false,
     editingStyle: {
-      _id: '',
-      name: '',
-      laborCost: '',
-      materialWeight: '',
-      imageUrl: ''
-    }
+      _id: "",
+      name: "",
+      laborCost: "",
+      materialWeight: "",
+      imageUrl: "",
+    },
   },
 
   onShow() {
@@ -41,9 +41,9 @@ Page({
   checkAdmin() {
     const userInfo = app.globalData.userInfo;
     if (!userInfo || !userInfo.isAdmin) {
-      wx.showToast({ title: '无权限访问', icon: 'none' });
+      wx.showToast({ title: "无权限访问", icon: "none" });
       setTimeout(() => {
-        wx.switchTab({ url: '/pages/index/index' });
+        wx.switchTab({ url: "/pages/index/index" });
       }, 1500);
       return;
     }
@@ -51,70 +51,80 @@ Page({
   },
 
   async fetchData() {
-    wx.showLoading({ title: '加载中' });
+    wx.showLoading({ title: "加载中" });
     try {
       // 并行请求所有数据
-      const [orders, stats, products] = await Promise.all([
-        request({ url: '/orders/admin/all' }),
-        request({ url: '/orders/admin/stats' }),
-        request({ url: '/products/all' })
-      ]) as any[];
-      
+      const [orders, stats, products] = (await Promise.all([
+        request({ url: "/orders/admin/all" }),
+        request({ url: "/orders/admin/stats" }),
+        request({ url: "/products/all" }),
+      ])) as any[];
+
       // 格式化订单数据
       const formattedOrders = orders.map((order: any) => ({
         ...order,
-        statusText: OrderStatusText[order.status as OrderStatus] || order.status
+        statusText:
+          OrderStatusText[order.status as OrderStatus] || order.status,
       }));
 
       this.setData({
         orders: formattedOrders,
-        stats: stats.monthlyStats || [], 
+        stats: stats.monthlyStats || [],
         recipes: products.recipes,
-        styles: products.styles
+        styles: products.styles,
       });
     } catch (err) {
       console.error(err);
-      wx.showToast({ title: '加载失败', icon: 'none' });
+      wx.showToast({ title: "加载失败", icon: "none" });
     } finally {
       wx.hideLoading();
     }
   },
 
-  async fetchOrders(status?: string) {
-    wx.showLoading({ title: '加载订单' });
+  async fetchOrders(filters?: any) {
+    wx.showLoading({ title: "加载订单" });
     try {
-      let url = '/orders/admin/all';
-      if (status) {
-        url += `?status=${status}`;
-      }
-      const orders = await request({ url }) as any[];
-      
+      typeof status === "string" ? { status } : status || {};
+      let url = "/orders/admin/all";
+      const queryParts: string[] = [];
+      if (filters.status)
+        if (filters.month)
+          queryParts.push(`month=${encodeURIComponent(filters.month)}`);
+      if (queryParts.length > 0) url += `?${queryParts.join("&")}`;
+      const orders = (await request({ url })) as any[];
+
       const formattedOrders = orders.map((order: any) => ({
         ...order,
-        statusText: OrderStatusText[order.status as OrderStatus] || order.status
+        statusText:
+          OrderStatusText[order.status as OrderStatus] || order.status,
       }));
 
       this.setData({
-        orders: formattedOrders
+        orders: formattedOrders,
       });
     } catch (err) {
-      wx.showToast({ title: '加载订单失败', icon: 'none' });
+      wx.showToast({ title: "加载订单失败", icon: "none" });
     } finally {
       wx.hideLoading();
     }
   },
 
-  viewPendingOrders() {
-    this.setData({ currentTab: 'orders' });
-    this.fetchOrders('pending,wait_confirm,confirmed');
+  viewPendingOrders(e: any) {
+    const { year, month } = e?.currentTarget?.dataset || {};
+    this.setData({ currentTab: "orders" });
+    this.fetchOrders({
+      status: "pending,wait_confirm,confirmed",
+      year,
+      month,
+    });
   },
 
   switchTab(e: any) {
     const tab = e.currentTarget.dataset.tab;
     this.setData({ currentTab: tab });
-    if (tab === 'orders') {
-        // Reset filter when manually switching to orders tab
-        this.fetchOrders(); 
+    if (tab === "orders") {
+      // Reset filter when manually switching to orders tab
+      this.fetchOrders();
     }
   },
 
@@ -122,55 +132,58 @@ Page({
   async updatePrice(e: any) {
     const { id } = e.currentTarget.dataset;
     wx.showModal({
-      title: '修改价格',
+      title: "修改价格",
       editable: true,
-      placeholderText: '请输入最终价格',
+      placeholderText: "请输入最终价格",
       success: async (res) => {
         if (res.confirm && res.content) {
           try {
             await request({
-                url: `/orders/admin/${id}/price`,
-                method: 'PUT',
-                data: { finalPrice: parseFloat(res.content) }
+              url: `/orders/admin/${id}/price`,
+              method: "PUT",
+              data: { finalPrice: parseFloat(res.content) },
             });
             this.fetchData();
           } catch (err) {
-            wx.showToast({ title: '修改失败', icon: 'none' });
+            wx.showToast({ title: "修改失败", icon: "none" });
           }
         }
-      }
+      },
     });
   },
 
   async updateStatus(e: any) {
     const { id } = e.currentTarget.dataset;
     const statuses = [
-      { key: OrderStatus.PAID, text: '已付款' },
-      { key: OrderStatus.PRODUCING, text: '制作中' },
-      { key: OrderStatus.SHIPPED, text: '已发货' },
-      { key: OrderStatus.RECEIVED, text: '已收货' }
+      { key: OrderStatus.PAID, text: "已付款" },
+      { key: OrderStatus.PRODUCING, text: "制作中" },
+      { key: OrderStatus.SHIPPED, text: "已发货" },
+      { key: OrderStatus.RECEIVED, text: "已收货" },
     ];
-    
+
     wx.showActionSheet({
-      itemList: statuses.map(s => s.text),
+      itemList: statuses.map((s) => s.text),
       success: async (res) => {
         const status = statuses[res.tapIndex].key;
         let expressData = {};
         if (status === OrderStatus.SHIPPED) {
           // 这里简化处理，实际应弹窗输入物流信息
-          expressData = { expressCompany: '圆通', expressNumber: 'YT123456789' };
+          expressData = {
+            expressCompany: "圆通",
+            expressNumber: "YT123456789",
+          };
         }
         try {
           await request({
             url: `/orders/admin/${id}/status`,
-            method: 'PUT',
-            data: { status, ...expressData }
+            method: "PUT",
+            data: { status, ...expressData },
           });
           this.fetchData();
         } catch (err) {
-          wx.showToast({ title: '更新失败', icon: 'none' });
+          wx.showToast({ title: "更新失败", icon: "none" });
         }
-      }
+      },
     });
   },
 
@@ -185,15 +198,21 @@ Page({
           _id: recipe._id,
           name: recipe.name,
           description: recipe.description,
-          ingredientsStr: (recipe.ingredients || []).join('，'), // 逗号分隔
-          pricePerKg: recipe.pricePerKg.toString()
-        }
+          ingredientsStr: (recipe.ingredients || []).join("，"), // 逗号分隔
+          pricePerKg: recipe.pricePerKg.toString(),
+        },
       });
     } else {
       // 新增模式
       this.setData({
         showRecipeModal: true,
-        editingRecipe: { _id: '', name: '', description: '', ingredientsStr: '', pricePerKg: '' }
+        editingRecipe: {
+          _id: "",
+          name: "",
+          description: "",
+          ingredientsStr: "",
+          pricePerKg: "",
+        },
       });
     }
   },
@@ -205,44 +224,48 @@ Page({
   onRecipeInput(e: any) {
     const field = e.currentTarget.dataset.field;
     this.setData({
-      [`editingRecipe.${field}`]: e.detail.value
+      [`editingRecipe.${field}`]: e.detail.value,
     });
   },
 
   async saveRecipe() {
-    const { _id, name, description, ingredientsStr, pricePerKg } = this.data.editingRecipe;
+    const { _id, name, description, ingredientsStr, pricePerKg } =
+      this.data.editingRecipe;
     if (!name || !pricePerKg) {
-      wx.showToast({ title: '名称和单价必填', icon: 'none' });
+      wx.showToast({ title: "名称和单价必填", icon: "none" });
       return;
     }
 
-    const ingredients = ingredientsStr.split(/[,，]/).map((s: string) => s.trim()).filter((s: string) => s);
+    const ingredients = ingredientsStr
+      .split(/[,，]/)
+      .map((s: string) => s.trim())
+      .filter((s: string) => s);
     const data = {
       name,
       description,
       ingredients,
-      pricePerKg: parseFloat(pricePerKg)
+      pricePerKg: parseFloat(pricePerKg),
     };
 
-    wx.showLoading({ title: '保存中' });
+    wx.showLoading({ title: "保存中" });
     try {
       if (_id) {
         await request({
-            url: `/products/recipes/${_id}`,
-            method: 'PUT',
-            data
+          url: `/products/recipes/${_id}`,
+          method: "PUT",
+          data,
         });
       } else {
         await request({
-            url: '/products/recipes',
-            method: 'POST',
-            data
+          url: "/products/recipes",
+          method: "POST",
+          data,
         });
       }
       this.closeRecipeModal();
       this.fetchData();
     } catch (err) {
-      wx.showToast({ title: '保存失败', icon: 'none' });
+      wx.showToast({ title: "保存失败", icon: "none" });
     } finally {
       wx.hideLoading();
     }
@@ -251,24 +274,24 @@ Page({
   async deleteRecipe(e: any) {
     const { id } = e.currentTarget.dataset;
     wx.showModal({
-      title: '确认删除',
-      content: '删除后无法恢复，是否继续？',
+      title: "确认删除",
+      content: "删除后无法恢复，是否继续？",
       success: async (res) => {
         if (res.confirm) {
-          wx.showLoading({ title: '删除中' });
+          wx.showLoading({ title: "删除中" });
           try {
             await request({
-                url: `/products/recipes/${id}`,
-                method: 'DELETE'
+              url: `/products/recipes/${id}`,
+              method: "DELETE",
             });
             this.fetchData();
           } catch (err) {
-            wx.showToast({ title: '删除失败', icon: 'none' });
+            wx.showToast({ title: "删除失败", icon: "none" });
           } finally {
             wx.hideLoading();
           }
         }
-      }
+      },
     });
   },
 
@@ -283,13 +306,19 @@ Page({
           name: style.name,
           laborCost: style.laborCost.toString(),
           materialWeight: style.materialWeight.toString(),
-          imageUrl: style.image || style.imageUrl // Backend uses image, frontend uses imageUrl
-        }
+          imageUrl: style.image || style.imageUrl, // Backend uses image, frontend uses imageUrl
+        },
       });
     } else {
       this.setData({
         showStyleModal: true,
-        editingStyle: { _id: '', name: '', laborCost: '', materialWeight: '', imageUrl: '' }
+        editingStyle: {
+          _id: "",
+          name: "",
+          laborCost: "",
+          materialWeight: "",
+          imageUrl: "",
+        },
       });
     }
   },
@@ -301,21 +330,21 @@ Page({
   onStyleInput(e: any) {
     const field = e.currentTarget.dataset.field;
     this.setData({
-      [`editingStyle.${field}`]: e.detail.value
+      [`editingStyle.${field}`]: e.detail.value,
     });
   },
 
   async uploadStyleImage() {
     try {
-      const res = await wx.chooseMedia({ count: 1, mediaType: ['image'] });
+      const res = await wx.chooseMedia({ count: 1, mediaType: ["image"] });
       const tempFilePath = res.tempFiles[0].tempFilePath;
-      
-      wx.showLoading({ title: '上传中' });
-      
+
+      wx.showLoading({ title: "上传中" });
+
       const fileUrl = await uploadFile(tempFilePath);
-      
+
       this.setData({
-        'editingStyle.imageUrl': fileUrl
+        "editingStyle.imageUrl": fileUrl,
       });
       wx.hideLoading();
     } catch (err) {
@@ -324,9 +353,10 @@ Page({
   },
 
   async saveStyle() {
-    const { _id, name, laborCost, materialWeight, imageUrl } = this.data.editingStyle;
+    const { _id, name, laborCost, materialWeight, imageUrl } =
+      this.data.editingStyle;
     if (!name || !laborCost || !materialWeight) {
-      wx.showToast({ title: '名称、工费、耗材必填', icon: 'none' });
+      wx.showToast({ title: "名称、工费、耗材必填", icon: "none" });
       return;
     }
 
@@ -334,29 +364,29 @@ Page({
       name,
       laborCost: parseFloat(laborCost),
       materialWeight: parseFloat(materialWeight),
-      image: imageUrl // Backend expects 'image'
+      image: imageUrl, // Backend expects 'image'
     };
 
-    wx.showLoading({ title: '保存中' });
+    wx.showLoading({ title: "保存中" });
     try {
       if (_id) {
         await request({
-            url: `/products/styles/${_id}`,
-            method: 'PUT',
-            data
+          url: `/products/styles/${_id}`,
+          method: "PUT",
+          data,
         });
       } else {
         await request({
-            url: '/products/styles',
-            method: 'POST',
-            data
+          url: "/products/styles",
+          method: "POST",
+          data,
         });
       }
       this.closeStyleModal();
       this.fetchData();
     } catch (err) {
       console.error(err);
-      wx.showToast({ title: '保存失败', icon: 'none' });
+      wx.showToast({ title: "保存失败", icon: "none" });
     } finally {
       wx.hideLoading();
     }
@@ -365,24 +395,24 @@ Page({
   async deleteStyle(e: any) {
     const { id } = e.currentTarget.dataset;
     wx.showModal({
-      title: '确认删除',
-      content: '删除后无法恢复，是否继续？',
+      title: "确认删除",
+      content: "删除后无法恢复，是否继续？",
       success: async (res) => {
         if (res.confirm) {
-          wx.showLoading({ title: '删除中' });
+          wx.showLoading({ title: "删除中" });
           try {
             await request({
-                url: `/products/styles/${id}`,
-                method: 'DELETE'
+              url: `/products/styles/${id}`,
+              method: "DELETE",
             });
             this.fetchData();
           } catch (err) {
-            wx.showToast({ title: '删除失败', icon: 'none' });
+            wx.showToast({ title: "删除失败", icon: "none" });
           } finally {
             wx.hideLoading();
           }
         }
-      }
+      },
     });
-  }
+  },
 });

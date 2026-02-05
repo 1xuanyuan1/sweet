@@ -14,6 +14,6 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false
   },
-  "include": ["miniprogram/**/*.ts", "cloudfunctions/**/*.ts"],
+  "include": ["miniprogram/**/*.ts"],
   "exclude": ["node_modules"]
 }

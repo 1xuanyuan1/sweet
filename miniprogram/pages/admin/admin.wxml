@@ -1,12 +1,19 @@
 <!-- pages/admin/admin.wxml -->
 <view class="container">
   <view class="tabs">
-    <view class="tab {{currentTab === 'orders' ? 'active' : ''}}" bindtap="switchTab" data-tab="orders">订单管理</view>
-    <view class="tab {{currentTab === 'stats' ? 'active' : ''}}" bindtap="switchTab" data-tab="stats">财务统计</view>
-    <view class="tab {{currentTab === 'recipes' ? 'active' : ''}}" bindtap="switchTab" data-tab="recipes">方子管理</view>
-    <view class="tab {{currentTab === 'styles' ? 'active' : ''}}" bindtap="switchTab" data-tab="styles">款式管理</view>
+    <view class="tab {{currentTab === 'orders' ? 'active' : ''}}" bindtap="switchTab" data-tab="orders">
+      订单管理
+    </view>
+    <view class="tab {{currentTab === 'stats' ? 'active' : ''}}" bindtap="switchTab" data-tab="stats">
+      财务统计
+    </view>
+    <view class="tab {{currentTab === 'recipes' ? 'active' : ''}}" bindtap="switchTab" data-tab="recipes">
+      方子管理
+    </view>
+    <view class="tab {{currentTab === 'styles' ? 'active' : ''}}" bindtap="switchTab" data-tab="styles">
+      款式管理
+    </view>
   </view>
-
   <!-- 订单列表 -->
   <view wx:if="{{currentTab === 'orders'}}" class="order-list">
     <view wx:for="{{orders}}" wx:key="_id" class="order-card card">
@@ -21,11 +28,12 @@
       </view>
       <view class="actions">
         <button size="mini" bindtap="updatePrice" data-id="{{item._id}}">改价</button>
-        <button size="mini" bindtap="updateStatus" data-id="{{item._id}}" data-current-status="{{item.status}}">更新状态</button>
+        <button size="mini" bindtap="updateStatus" data-id="{{item._id}}" data-current-status="{{item.status}}">
+          更新状态
+        </button>
       </view>
     </view>
   </view>
-
   <!-- 财务统计 -->
   <view wx:if="{{currentTab === 'stats'}}" class="stats-list">
     <view wx:for="{{stats}}" wx:key="_id" class="stats-card card">
@@ -43,7 +51,7 @@
           <text class="label">已收款</text>
           <text class="val green">¥{{item.paidAmount}}</text>
         </view>
-        <view class="stats-item clickable" bindtap="viewPendingOrders">
+        <view class="stats-item clickable" bindtap="viewPendingOrders" data-year="{{item._id.year}}" data-month="{{item._id.month}}">
           <text class="label">代收款 (点击查看)</text>
           <text class="val red">¥{{item.pendingAmount}}</text>
         </view>
@@ -51,7 +59,6 @@
     </view>
     <view wx:if="{{stats.length === 0}}" class="empty-tip">暂无财务数据</view>
   </view>
-
   <!-- 方子管理 -->
   <view wx:if="{{currentTab === 'recipes'}}" class="recipe-list">
     <button class="btn-add" bindtap="openRecipeModal">新增方子</button>
@@ -67,7 +74,6 @@
       </view>
     </view>
   </view>
-
   <!-- 款式管理 -->
   <view wx:if="{{currentTab === 'styles'}}" class="style-list">
     <button class="btn-add" bindtap="openStyleModal">新增款式</button>
@@ -83,39 +89,32 @@
       </view>
     </view>
   </view>
-
   <!-- Recipe Modal -->
   <view class="modal-mask" wx:if="{{showRecipeModal}}">
     <view class="modal-content card">
       <view class="modal-title">{{editingRecipe._id ? '编辑方子' : '新增方子'}}</view>
-      
       <view class="form-group">
         <view class="form-label">方子名称</view>
         <input class="input" placeholder="请输入名称" value="{{editingRecipe.name}}" bindinput="onRecipeInput" data-field="name" />
       </view>
-
       <view class="form-group">
         <view class="form-label">功效描述</view>
         <input class="input" placeholder="请输入描述" value="{{editingRecipe.description}}" bindinput="onRecipeInput" data-field="description" />
       </view>
-
       <view class="form-group">
         <view class="form-label">配方材料 (逗号分隔)</view>
         <textarea class="textarea" placeholder="例如：沉香，檀香，降真香" value="{{editingRecipe.ingredientsStr}}" bindinput="onRecipeInput" data-field="ingredientsStr" />
       </view>
-
       <view class="form-group">
         <view class="form-label">单价 (元/kg)</view>
         <input class="input" type="digit" placeholder="0.00" value="{{editingRecipe.pricePerKg}}" bindinput="onRecipeInput" data-field="pricePerKg" />
       </view>
-
       <view class="modal-actions">
         <button size="mini" bindtap="closeRecipeModal">取消</button>
         <button size="mini" type="primary" bindtap="saveRecipe">保存</button>
       </view>
     </view>
   </view>
-
   <!-- Style Modal -->
   <view class="modal-mask" wx:if="{{showStyleModal}}">
     <view class="modal-content card">
@@ -124,22 +123,18 @@
         <image class="upload-img" src="{{editingStyle.imageUrl || '/images/logo.png'}}" mode="aspectFit"></image>
         <view class="upload-tip">点击上传图片</view>
       </view>
-      
       <view class="form-group">
         <view class="form-label">款式名称</view>
         <input class="input" placeholder="请输入名称" value="{{editingStyle.name}}" bindinput="onStyleInput" data-field="name" />
       </view>
-
       <view class="form-group">
         <view class="form-label">工费 (元/个)</view>
         <input class="input" type="digit" placeholder="0.00" value="{{editingStyle.laborCost}}" bindinput="onStyleInput" data-field="laborCost" />
       </view>
-
       <view class="form-group">
         <view class="form-label">耗材量 (kg/个)</view>
         <input class="input" type="digit" placeholder="0.000" value="{{editingStyle.materialWeight}}" bindinput="onStyleInput" data-field="materialWeight" />
       </view>
-
       <view class="modal-actions">
         <button size="mini" bindtap="closeStyleModal">取消</button>
         <button size="mini" type="primary" bindtap="saveStyle">保存</button>

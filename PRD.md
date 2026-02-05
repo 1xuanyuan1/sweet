@@ -113,7 +113,9 @@
 ### Orders
 
 - `GET /orders/my`: 获取我的订单 (需 Header: `Authorization: Bearer <token>`)
+- `GET /orders/:id`: 获取订单详情 (仅本人可见)
 - `POST /orders`: 创建订单
+- `PUT /orders/:id/confirm`: 客户确认订单价格（状态从 wait_confirm -> confirmed，仅本人可操作）
 
 ### Upload
 
