@@ -1,0 +1,22 @@
+<!-- pages/login/login.wxml -->
+<view class="container">
+  <view class="header">
+    <image class="logo" src="/images/logo.png" mode="aspectFit"></image>
+    <view class="brand-name">和熹香堂</view>
+    <view class="brand-slogan">非遗手工合香 · 承袭千年余韵</view>
+  </view>
+
+  <view class="login-card card">
+    <view class="title">欢迎加入</view>
+    <view class="desc">请完善您的信息以开始定制之旅</view>
+    
+    <button class="avatar-wrapper" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <image class="avatar" src="{{tempAvatarUrl || '/images/logo.png'}}"></image>
+      <view class="avatar-tip" wx:if="{{!tempAvatarUrl}}">点击设置头像</view>
+    </button>
+    
+    <input type="nickname" class="nickname-input" placeholder="请输入您的昵称" bindinput="onNickNameInput" />
+    
+    <button class="btn-primary" bindtap="login" loading="{{loading}}">开启香道之旅</button>
+  </view>
+</view>

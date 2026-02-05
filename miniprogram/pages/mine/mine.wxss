@@ -1,0 +1,106 @@
+/* pages/mine/mine.wxss */
+.container {
+  padding: 32rpx;
+  background-color: #FBF9F2;
+  min-height: 100vh;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 40rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.05);
+  margin-bottom: 30rpx;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  border: 4rpx solid #E0DCD5;
+  margin-right: 30rpx;
+}
+
+.info {
+  flex: 1;
+}
+
+.nickname {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.role {
+  display: inline-block;
+  font-size: 22rpx;
+  color: #B89650;
+  border: 1rpx solid #B89650;
+  padding: 2rpx 12rpx;
+  border-radius: 20rpx;
+}
+
+/* Menu */
+.menu-list {
+  padding: 0;
+}
+
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 36rpx 40rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+  font-size: 30rpx;
+  color: #333;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.btn-reset {
+  background: none;
+  border: none;
+  margin: 0;
+  line-height: inherit;
+  width: 100% !important;
+  font-weight: normal;
+}
+
+.btn-reset::after {
+  border: none;
+}
+
+.menu-left {
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  margin-right: 20rpx;
+  font-size: 36rpx;
+}
+
+.arrow {
+  color: #ccc;
+  font-family: monospace;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  margin-top: 60rpx;
+}
+
+.copyright {
+  font-size: 24rpx;
+  color: #ccc;
+}
