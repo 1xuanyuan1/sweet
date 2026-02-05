@@ -29,26 +29,27 @@
   <!-- 财务统计 -->
   <view wx:if="{{currentTab === 'stats'}}" class="stats-list">
     <view wx:for="{{stats}}" wx:key="_id" class="stats-card card">
-      <view class="stats-month">{{item._id}}</view>
+      <view class="stats-month">{{item._id.year}}年{{item._id.month}}月</view>
       <view class="stats-grid">
         <view class="stats-item">
           <text class="label">总单数</text>
-          <text class="val">{{item.totalOrders}}</text>
+          <text class="val">{{item.orderCount}}</text>
         </view>
         <view class="stats-item">
-          <text class="label">总金额</text>
-          <text class="val">¥{{item.totalAmount}}</text>
+          <text class="label">总销售额</text>
+          <text class="val">¥{{item.totalSales}}</text>
         </view>
         <view class="stats-item">
-          <text class="label">已收</text>
+          <text class="label">已收款</text>
           <text class="val green">¥{{item.paidAmount}}</text>
         </view>
-        <view class="stats-item">
-          <text class="label">待收</text>
+        <view class="stats-item clickable" bindtap="viewPendingOrders">
+          <text class="label">代收款 (点击查看)</text>
           <text class="val red">¥{{item.pendingAmount}}</text>
         </view>
       </view>
     </view>
+    <view wx:if="{{stats.length === 0}}" class="empty-tip">暂无财务数据</view>
   </view>
 
   <!-- 方子管理 -->

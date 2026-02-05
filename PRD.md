@@ -2,116 +2,127 @@
 
 ## 1. 项目背景
 
-“和熹香堂”是一个专注于合香非遗手工的品牌。为了提升客户选购体验及简化管理员（主理人）的订单管理流程，需开发一款基于微信小程序原生语法及云开发的移动应用。
+“和熹香堂”是一个专注于合香非遗手工的品牌。为了提升客户选购体验及简化管理员（主理人）的订单管理流程，开发了一款基于微信小程序原生语法及自建后端服务的移动应用。
 
-## 2. 用户角色
+## 2. 技术架构 (Technical Architecture)
 
-- **管理员 (Admin)**: 品牌主理人，负责产品数据维护、订单审核、价格调整、状态更新及财务汇总。只有被授权的管理员才能进入后台管理界面。
-- **客户 (Customer)**: 通过微信授权登录，进行产品选购、订单确认及状态查看。
+- **前端**: 微信小程序原生开发 (TypeScript + WXML + WXSS)
+- **后端**: Node.js + Express + TypeScript
+- **数据库**: MongoDB (v6.0+)
+- **部署环境**: 腾讯云 CVM (CentOS)
+- **域名**: `api.dduke.cn` (HTTPS enabled via Let's Encrypt)
+- **进程管理**: PM2
+- **反向代理**: Nginx
+- **可视化管理**: Mongo Express (https://api.dduke.cn/mongo/)
 
 ## 3. 核心功能模块
 
 ### 3.1 登录流程 (User Flow)
 
-- **初始入口**: 用户首次打开小程序，强制进入“登录页”。
+- **初始入口**: 用户首次打开小程序，需进行登录。
 - **身份验证**:
-  - 未注册/未登录: 需点击“微信授权登录”创建/更新用户信息。
-  - 已登录: 自动跳转至主页面（Tab Bar 页）。
-- **主页面架构**: 底部 Tab Bar 导航，包含：
-  1. **款式 (Styles)**: 首页，相册式展示所有款式。
-  2. **订单 (Orders)**: 历史订单列表。
-  3. **我的 (Mine)**: 个人中心及管理员入口。
+  - **微信授权登录**: 调用 `wx.login` 获取 code，发送至后端 `/api/auth/login`。
+  - **Token机制**: 后端验证微信 Session，生成 JWT Token 返回前端。
+  - **本地存储**: Token 存储在 `wx.getStorageSync('token')`。
+  - **自动拦截**:
+    - 前端封装 `request` 工具类。
+    - **逻辑**: 当接口返回 `401 Unauthorized` 时，自动清除本地 Token，并弹窗提示“请先登录”，点击确定后跳转至登录页 (`/pages/login/login`)。
 
 ### 3.2 选购流程 (款式页)
 
-- **相册展示**: 以网格/瀑布流形式展示所有“款式”图片及名称。
-- **弹窗下单**:
-  - 点击任一款式，弹出“定制详情”弹窗。
-  - **弹窗内容**:
-    - 选择“方子” (Recipes)。
-    - 输入“数量”。
-    - 实时显示“预估价格”。
-    - “提交订单”按钮。
-- **提交后**: 跳转至“订单”页查看状态。
+- **接口**: `/api/products/all` 获取所有方子和款式。
+- **展示**: 网格/瀑布流展示款式。
+- **下单**: 选择方子、数量，计算预估价格，提交订单。
 
 ### 3.3 订单管理 (订单页)
 
-- **列表展示**:
-  - 客户仅见自己的订单。
-  - 状态流转与原有逻辑一致。
-- **功能**: 点击订单可进入详情页查看进度。
+- **接口**: `/api/orders/my` 获取当前用户订单。
+- **页面权限**: 进入页面时（`onShow`），优先检查本地 Token。若无 Token，不发起请求，直接跳转至登录页或展示空状态并引导登录。
+- **接口权限**: 需携带 Token。若未登录（接口返回 401），触发自动拦截逻辑跳转登录页。
+- **状态**: 待确认 -> 制作中 -> 已发货 -> 已完成。
 
 ### 3.4 个人中心 (我的页)
 
-- **基础信息**: 展示头像、昵称。
-- **管理员入口**: 若当前用户 `isAdmin: true`，显示“后台管理”按钮，点击跳转至独立的 Admin 页面。
+- **展示**: 用户昵称、头像。
+- **管理员**: 通过 `isAdmin` 字段判断，显示后台管理入口。
 
 ### 3.5 后台管理 (Admin)
 
-- **入口**: 仅管理员可见（从“我的”页面进入）。
-- **功能模块**:
-  - **订单管理**: 审核、改价、更新状态。
-  - **财务统计**: 月度报表。
-  - **方子管理**: 增删改查。
-  - **款式管理**: 增删改查 (含图片上传)。
+- **订单列表**:
+  - 支持按状态筛选（如：待确认、制作中、已完成）。
+  - 支持按月筛选。
+  - 点击订单可查看详情并修改状态/价格。
 
-## 4. 数据结构设计 (云数据库)
+- **财务统计**:
+  - **接口**: `/api/orders/admin/stats`
+  - **展示内容**:
+    - **总销售额**: 本月所有订单总金额 (`monthlyStats[0].totalSales`)。
+    - **已收款**: 本月已付款/已完成订单金额 (`monthlyStats[0].paidAmount`)。
+    - **代收款**: 本月待付款/待确认订单金额 (`monthlyStats[0].pendingAmount`)。
+  - **交互**: 点击“代收款”卡片，跳转至订单列表页，并自动筛选出所有待处理状态（`pending`, `wait_confirm`, `confirmed`）的订单。
 
-(保持原有结构，重点确保 `imageUrl` 字段存储云文件 ID)
+- **数据管理**: 通过 Mongo Express 可视化工具直接管理数据库。
 
-### 4.1 Recipes (方子)
+## 4. 数据结构设计 (MongoDB Models)
 
-- `_id`: string
+### 4.1 Recipe (方子)
+
 - `name`: string (如：安神方)
-- `description`: string (功效)
-- `ingredients`: string[] (材料)
-- `pricePerKg`: number (元/kg)
+- `description`: string
+- `ingredients`: string[]
+- `pricePerKg`: number
 
-### 4.2 Styles (款式)
+### 4.2 Style (款式)
 
-- `_id`: string
 - `name`: string (如：中元宝)
-- `laborCost`: number (工费/个)
-- `materialWeight`: number (耗材量 kg/个)
-- `imageUrl`: string (照片路径)
+- `laborCost`: number
+- `materialWeight`: number
+- `image`: string (可选，图片 URL)
 
-### 4.3 Users (用户 - 新增)
+### 4.3 User (用户)
 
-- `_id`: string (openid)
+- `openid`: string (微信 OpenID)
 - `nickName`: string
 - `avatarUrl`: string
-- `isAdmin`: boolean (是否为管理员)
+- `isAdmin`: boolean
 - `createdAt`: Date
 - `updatedAt`: Date
 
-### 4.4 Orders (订单)
+### 4.4 Order (订单)
 
-- `_id`: string
-- `_openid`: string (核心字段：微信云开发自动注入的用户唯一标识，用于关联 Users 集合的 `_id`)
-- `userInfo`: Object (下单时的用户快照: { nickName, avatarUrl }) - _注意：仅作为快照，最新信息需通过 \_openid 联表查询获取_
-- `recipeId`: string
-- `styleId`: string
+- `user`: ObjectId (关联 User)
+- `recipe`: ObjectId (关联 Recipe)
+- `style`: ObjectId (关联 Style)
 - `quantity`: number
-- `originalPrice`: number (原始计算总价)
-- `finalPrice`: number (管理员修改后的最终价)
-- `status`: string (pending/wait_confirm/confirmed/paid/producing/shipped/received)
-  - 对应中文: 待确认 / 待客户确认 / 已确认 / 已付款 / 制作中 / 已发货 / 已收货
-- `expressCompany`: string
-- `expressNumber`: string
+- `status`: string (pending/confirmed/producing/shipped/completed)
+- `totalPrice`: number
 - `createdAt`: Date
-- `updatedAt`: Date
 
-## 5. UI/UX 风格定义
+## 5. API 接口文档
 
-- **风格**: 新中式、禅意、简约、高雅。
-- **主色调**:
-  - 品牌红: `#8B0000` (深红)
-  - 点缀金: `#D4AF37` (古铜金)
-  - 背景色: `#F9F6F2` (宣纸色)
-- **交互**: 简洁的卡片式布局，平滑的过渡动画。
+- **Base URL**: `https://api.dduke.cn/api`
 
-## 6. 开发计划 (第一期)
+### Auth
 
-- 不接入微信支付，仅进行价格确认与状态管理。
-- 重点在于方子与款式的灵活组合逻辑。
-- 实现基本的模板消息通知（或订阅消息）。
+- `POST /auth/login`: `{ code, userInfo }` -> `{ token, user }`
+
+### Products
+
+- `GET /products/all`: `{ recipes: [], styles: [] }`
+
+### Orders
+
+- `GET /orders/my`: 获取我的订单 (需 Header: `Authorization: Bearer <token>`)
+- `POST /orders`: 创建订单
+
+### Upload
+
+- `POST /upload`: 上传文件 (无权限限制) -> `{ url: "..." }`
+
+## 6. 运维与部署
+
+- **服务器**: root@dduke.cn
+- **项目路径**: `/root/sweet-server`
+- **环境变量**: `.env` (包含 JWT_SECRET, WX_APP_ID, WX_APP_SECRET 等)
+- **数据初始化**: `npx ts-node src/scripts/seed.ts` (用于重置基础数据)
+- **日志查看**: `pm2 logs sweet-server`

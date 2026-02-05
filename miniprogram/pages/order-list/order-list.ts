@@ -9,6 +9,22 @@ Page({
   },
 
   onShow() {
+    // 页面级权限控制：检查 Token
+    const token = wx.getStorageSync('token');
+    if (!token) {
+      wx.showModal({
+        title: '提示',
+        content: '请先登录查看订单',
+        showCancel: false,
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({ url: '/pages/login/login' });
+          }
+        }
+      });
+      return;
+    }
+
     this.fetchOrders();
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({

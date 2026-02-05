@@ -68,7 +68,7 @@ Page({
 
       this.setData({
         orders: formattedOrders,
-        stats: stats.list || [], // Backend implementation pending for stats list
+        stats: stats.monthlyStats || [], 
         recipes: products.recipes,
         styles: products.styles
       });
@@ -80,8 +80,42 @@ Page({
     }
   },
 
+  async fetchOrders(status?: string) {
+    wx.showLoading({ title: '加载订单' });
+    try {
+      let url = '/orders/admin/all';
+      if (status) {
+        url += `?status=${status}`;
+      }
+      const orders = await request({ url }) as any[];
+      
+      const formattedOrders = orders.map((order: any) => ({
+        ...order,
+        statusText: OrderStatusText[order.status as OrderStatus] || order.status
+      }));
+
+      this.setData({
+        orders: formattedOrders
+      });
+    } catch (err) {
+      wx.showToast({ title: '加载订单失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  viewPendingOrders() {
+    this.setData({ currentTab: 'orders' });
+    this.fetchOrders('pending,wait_confirm,confirmed');
+  },
+
   switchTab(e: any) {
-    this.setData({ currentTab: e.currentTarget.dataset.tab });
+    const tab = e.currentTarget.dataset.tab;
+    this.setData({ currentTab: tab });
+    if (tab === 'orders') {
+        // Reset filter when manually switching to orders tab
+        this.fetchOrders(); 
+    }
   },
 
   // --- 订单逻辑 ---

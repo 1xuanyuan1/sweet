@@ -16,9 +16,13 @@ Page({
 
   async fetchOrderDetail(id: string) {
     try {
-      // 简单起见，从我的订单列表中过滤或重新请求
+      // 兼容逻辑：通过 getMyOrders 获取所有订单并在本地查找
+      // 理想情况下后端应提供 /orders/:id 接口
       const res: any = await callCloud('manage-orders', 'CUSTOMER_GET_ALL');
-      const orderData = res.data.find((o: Order) => o._id === id);
+      // callCloud 返回的是 { result: { data: [...] } }
+      const orders = res.result.data; 
+      const orderData = orders.find((o: Order) => o._id === id);
+      
       if (orderData) {
         const order = {
           ...orderData,
@@ -29,6 +33,7 @@ Page({
         wx.showToast({ title: '订单不存在', icon: 'none' });
       }
     } catch (err) {
+      console.error(err);
       wx.showToast({ title: '加载失败', icon: 'none' });
     }
   },
